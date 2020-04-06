@@ -189,7 +189,7 @@ void RtmServerController::New(const Nan::FunctionCallbackInfo<Value> &args)
 
 void RtmServerController::initialize(const Nan::FunctionCallbackInfo<v8::Value> &args)
 {
-  
+
   do {
     NodeString app_id, user_id, token;
     uint32_t cid;
@@ -202,12 +202,12 @@ void RtmServerController::initialize(const Nan::FunctionCallbackInfo<v8::Value> 
     int result = instance->controller_->initialize(app_id, instance);
     napi_set_int_result(args, result);
   } while(false);
-  
+
 }
 
 void RtmServerController::login(const Nan::FunctionCallbackInfo<v8::Value> &args)
 {
-  
+
   do {
     NodeString user_id, token;
     uint32_t cid;
@@ -231,12 +231,12 @@ void RtmServerController::login(const Nan::FunctionCallbackInfo<v8::Value> &args
 
     napi_set_int_result(args, result);
   } while(false);
-  
+
 }
 
 void RtmServerController::logout(const Nan::FunctionCallbackInfo<v8::Value> &args)
 {
-  
+
   do
   {
     Isolate *isolate = Isolate::GetCurrent();
@@ -245,7 +245,7 @@ void RtmServerController::logout(const Nan::FunctionCallbackInfo<v8::Value> &arg
     bool result = instance->controller_->logout();
     napi_set_bool_result(args, result);
   } while (false);
-  
+
 }
 
 void RtmServerController::setLogFile(const Nan::FunctionCallbackInfo<v8::Value> &args)
@@ -372,7 +372,7 @@ void RtmServerController::queryPeersOnlineStatus(const Nan::FunctionCallbackInfo
   Isolate *isolate = Isolate::GetCurrent();
   HandleScope scope(isolate);
   RtmServerController *instance = ObjectWrap::Unwrap<RtmServerController>(args.Holder());
-  
+
   if(instance == nullptr) {
     Nan::ThrowTypeError("rtm service not intialized");
     return;
@@ -507,9 +507,11 @@ void RtmServerController::onMessageReceivedFromPeer(const char *peerId, const ag
 {
   std::string mPeerId = std::string(peerId);
   std::string mText = std::string(message->getText());
-  agora::lb_linux_sdk::node_async_call::async_call([this, mPeerId, mText]() {
-    MAKE_JS_CALL_2(RTM_MESSAGE_RECEIVED_FROM_PEER, string, mPeerId.c_str(), string, mText.c_str());
-  });
+  if (!message->isOfflineMessage()) {
+    agora::lb_linux_sdk::node_async_call::async_call([this, mPeerId, mText]() {
+      MAKE_JS_CALL_2(RTM_MESSAGE_RECEIVED_FROM_PEER, string, mPeerId.c_str(), string, mText.c_str());
+    });
+  }
 }
 
 void RtmServerController::onQueryPeersOnlineStatusResult(long long requestId, const agora::rtm::PeerOnlineStatus* peersStatus, int peerCount, agora::rtm::QUERY_PEERS_ONLINE_STATUS_ERR errorCode)
@@ -541,7 +543,7 @@ void RtmServerController::onQueryPeersOnlineStatusResult(long long requestId, co
       NodeEventCallback& cb = *it->second;
       cb.callback.Get(isolate)->Call(cb.js_this.Get(isolate), 3, argv);
     }
-    
+
   });
 }
 
